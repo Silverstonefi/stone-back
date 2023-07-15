@@ -14,8 +14,8 @@ import {
   // approveDeposit,
   // declineDeposit,
   getUserTransactions,
-  CreateAccountNumber,
-  transfer,
+  // CreateAccountNumber,
+  // transfer,
 } from "../controllers/adminController.js";
 
 router.get("/users", allUsers);
@@ -32,8 +32,8 @@ router.post("/deposit", deposit);
 
 // router.put("/users/:id", editUser);
 router.get("/transactions", getUserTransactions);
-router.post("/transfer", transfer);
-router.post("/generate", CreateAccountNumber);
+// router.post("/transfer", transfer);
+// router.post("/generate", CreateAccountNumber);
 
 // router.post("/deleteuser", deleteUser);
 

@@ -1,4 +1,15 @@
 import mongoose from "mongoose";
+import { customAlphabet } from "nanoid";
+
+
+const alphabet = '0123456789';
+const nanoid = customAlphabet(alphabet, 10); // Generate a 10-digit number
+
+const generateSenderAccountNumber = () => {
+  let accountNumber = nanoid();
+  accountNumber = "01" + accountNumber.slice(0, 10);
+  return accountNumber;
+};
 
 const userSchema = new mongoose.Schema({
   firstName: {
@@ -25,33 +36,28 @@ const userSchema = new mongoose.Schema({
     minlength: [6, "Minimum password length is 6 characters"],
   },
   accountType: {
-    type: "string",
-    default: "",
+    type: Number,
+    default: generateSenderAccountNumber,
   },
   cardHolder: {
     type: "string",
     default: "",
     default: "",
   },
-  // accountNumber: {
-  //   type: String,
-  //   default: "",
-  // },
+  accountNumber: {
+    type: String,
+    default: "",
+  },
   balance: {
     type: Number,
     required: true,
     default: 0,
   },
-  senderAcct: {
-    type: String,
-    default: "",
-    unique: true,
-  },
-  receiverAcct: {
-    type: String,
-    default: "",
-    unique: true,
-  },
+  // receiverAcct: {
+  //   type: String,
+  //   default: "",
+  //   unique: true,
+  // },
   address: {
     type: String,
     default: "",
