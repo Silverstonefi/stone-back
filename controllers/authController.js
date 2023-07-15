@@ -23,29 +23,34 @@ const createToken = (obj) => {
 };
 
 const signup = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { firstName, lastName, email, password } = req.body;
 
-  const msg = checkUserDetails({ name, email, password });
+  const msg = checkUserDetails({ firstName, lastName, email, password });
   try {
-    if (msg.name !== "" || msg.email !== "" || msg.password !== "") {
+    if (
+      msg.firstName !== "" ||
+      msg.lastName !== "" ||
+      msg.email !== "" ||
+      msg.password !== ""
+    ) {
       res.status(400).json({ msg });
     } else {
       const user = await User.create({
-        name,
+        firstName,
+        lastName,
         email,
         password,
         deposit: 0,
         withdrawal: 0,
         balance: 0,
-        profits: 0,
       });
       const token = createToken({ user: user._id });
 
       let msg = `Dear User, Welcome to .
                 \nRegards, 
-                        \nPhoenixfx`;
+                        \nBank website`;
       let html = `<div> <div> Dear User,<div/>
-                <div>Welcome to Phoenixfx, click  <a href="https://phoenixfx.net/on-activate/${email}$">this<a/> link to activate your email</div>
+                <div>Welcome to BankSite, click  <a href="https://phoenixfx.net/on-activate/${email}$">this<a/> link to activate your email</div>
   
   
                   <div style="padding-top:70px">Regards,<div/>
@@ -54,13 +59,13 @@ const signup = async (req, res) => {
 
       res.status(201).json({
         user: {
-          name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
           email: user.email,
           password: user.password,
           deposit: 0,
           withdrawal: 0,
           balance: 0,
-          profits: 0,
         },
         token,
       });
@@ -222,7 +227,7 @@ const logout = (req, res) => {
 };
 
 const checkUserDetails = (details) => {
-  let message = { email: "", name: "", password: "" };
+  let message = { email: "", firstName: "", lastName: "", password: "" };
   if (!isEmail(details.email)) {
     if (isEmpty(details.email)) {
       message.email = "Email cannot be empty";
@@ -230,7 +235,10 @@ const checkUserDetails = (details) => {
       message.email = `${details.email} is not a valid email`;
     }
   }
-  if (isEmpty(details.name)) message.name = `Name cannot be empty`;
+  if (isEmpty(details.firstName))
+    message.firstName = `First Name cannot be empty`;
+  if (isEmpty(details.lastName)) message.lastName = `Last Name cannot be empty`;
+
   if (isEmpty(details.password)) {
     message.password = `Password cannot be empty`;
   } else if (details.password.length < 6) {
@@ -259,7 +267,7 @@ const sendPassword = async (req, res) => {
 
 const changePassword = async (req, res) => {
   const { email, pwd } = req.body;
-
+  console.log({ pwd });
   if (checkEmail(email)) {
     try {
       const isDone = await User.findOneAndUpdate(
@@ -268,6 +276,7 @@ const changePassword = async (req, res) => {
           password: pwd,
         }
       );
+      console.log({ isDone });
       res.json(isDone);
     } catch (err) {
       res.json({ err });

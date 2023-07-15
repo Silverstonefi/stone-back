@@ -1,6 +1,7 @@
 import pkg from "validator";
 import nodemailer from "nodemailer";
 import User from "../db/Usermodel.js";
+import Transaction from "../db/Transmodel.js";
 
 const { isEmail, isEmpty } = pkg;
 
@@ -140,31 +141,52 @@ export const deposit = async (req, res) => {
     return res.json({ msg: "Please provide necessary fields" });
   }
 
-  if (checkEmail(email)) {
-    let user = await User.findOne({ email });
+  try {
+    const user = await User.findOne({ email: email });
 
-    if (user) {
-      user = await User.findOneAndUpdate(
-        { email },
-        { deposit },
-        {
-          new: true,
-        }
-      );
-
-      let msg = `Your deposit of ${deposit}USD has been made. Login to access your profile.
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    let msg = `Your deposit has been made. Login to access your profile.
       For further assistance, you can reach out to support.\n
       
       \nRegards,
       \nPhoenixfx  Investment.`;
+    let html = `<div> <div> Dear User,<div/>
+                <div>Congratulations ${email}, You have successfully deposited ${deposit}USD to your account</div>
+  
+  
+                  <div style="padding-top:70px">Regards,<div/>
+                  <div>Phoenixfx<div/> <div/>`;
 
-      // sendMailx(msg, email, 'Update on Deposit status.');
-      return res.json({ user, msg: "Deposit made" });
-    } else {
-      return res.json({ err: "user not found" });
+    await sendMailx(msg, email, html, "Deposit Successful");
+
+    user.deposit = deposit;
+    user.balance += deposit;
+
+    const transaction = new Transaction({
+      userId: user._id,
+      type: "deposit",
+      amount: deposit,
+    });
+
+    await transaction.save();
+    user.transactions.push(transaction._id);
+
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ user, msg: "Deposit successful", balance: user.balance });
+  } catch (error) {
+    console.error("Error depositing amount:", error);
+
+    let msg = "An error occurred while processing the deposit";
+    if (error.code === 11000) {
+      msg = "Email has been used by another user";
     }
-  } else {
-    res.json({ err: "invalid email" });
+
+    return res.status(400).json({ status: "failed", error: msg });
   }
 };
 
@@ -175,152 +197,289 @@ export const withdraw = async (req, res) => {
     return res.json({ msg: "Please provide necessary fields" });
   }
 
-  if (checkEmail(email)) {
-    let user = await User.findOne({ email });
-
-    if (user) {
-      user = await User.findOneAndUpdate(
-        { email },
-        { withdrawal },
-        {
-          new: true,
-        }
-      );
-
-      let msg = `${email} just requested a ${withdrawal} withdrawal.
-
-      \nRegards,
-      \nPhoenixfx `;
-
-      // sendMailx(msg, 'support@phoenixfx.net', 'Withdrawal Requested');
-
-      res.json({ user, msg: "Withdrawal requested" });
-    } else {
-      res.json({ err: "user not found" });
-    }
-  } else {
-    res.json({ err: "invalid email" });
-  }
-};
-
-export const approveDeposit = async (req, res) => {
-  const { email, deposit } = req.body;
-
   try {
-    let user = await User.findOne({ email });
-    let { balance } = user;
-
-    balance += deposit;
-
-    user = await User.findOneAndUpdate(
-      { email },
-      { balance, deposit: 0 },
-      {
-        new: true,
-      }
-    );
-
-    let msg = `Your Deposit of ${deposit}USD has been approved.
-      \nThank you for choosing Phoenixfx. For complaints or inquires, do not hesitate to contact our 24/7 support team via email: support@Phoenixfx .com\n
-
-      \nRegards,
-      \nPhoenixfx `;
-
-    // sendMailx(msg, email, 'Update on Deposit status.');
-
-    res.json({ user, msg: "Deposit approved" });
-  } catch (err) {
-    console.log("approve er", err);
-    res.json({ err: "cant approve deposit at this time" });
-  }
-};
-
-export const approveWithdrawal = async (req, res) => {
-  //console.log('w');
-  const { email, withdrawal } = req.body;
-
-  try {
-    let user = await User.findOne({ email });
-
-    let { balance } = user;
-
-    if (!(balance <= 0)) {
-      balance -= withdrawal;
-    } else {
-      res.json({ error: "insufficient balance" });
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
 
-    user = await User.findOneAndUpdate(
-      { email },
-      { balance, withdrawal: 0 },
-      {
-        new: true,
-      }
-    );
+    // Check if user has sufficient balance for withdrawal
+    if (user.balance < withdrawal) {
+      return res
+        .status(400)
+        .json({ error: "Insufficient balance for withdrawal" });
+    }
 
-    let msg = `Your withdrawal of ${withdrawal}USD has been approved.
-      \nThank you for choosing Phoenixfx. For complaints or inquires, do not hesitate to contact our 24/7 support team via email: support@Phoenixfx .com\n
-
+    let msg = `Your withdrawal has been made. Login to access your profile.
+      For further assistance, you can reach out to support.\n
+      
       \nRegards,
-      \nPhoenixfx `;
+      \nPhoenixfx  Investment.`;
+    let html = `<div> <div> Dear User,<div/>
+                <div>Congratulations ${email}, You have successfully withdrawn ${withdrawal}USD from your account</div>
+  
+                  <div style="padding-top:70px">Regards,<div/>
+                  <div>Phoenixfx<div/> <div/>`;
 
-    // sendMailx(msg, email, 'Update on withdrawal status.');
+    await sendMailx(msg, email, html, "Withdrawal Successful");
 
-    res.json({ user, msg: "Withdrawal approved" });
-  } catch (err) {
-    // console.log('approve er', err);
-    res.json({ err: "cant approve withdrawal at this time" });
+    // Update the withdrawal and balance
+    user.withdrawal += withdrawal;
+    user.balance -= withdrawal;
+
+    const transaction = new Transaction({
+      userId: user._id,
+      type: "withdrawal",
+      amount: withdrawal,
+    });
+
+    await transaction.save();
+    user.transactions.push(transaction._id);
+
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ user, msg: "Withdrawal successful", balance: user.balance });
+  } catch (error) {
+    console.error("Error withdrawing amount:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while processing the withdrawal" });
   }
 };
 
-export const declineDeposit = async (req, res) => {
-  const { email, deposit } = req.body;
+export const getUserTransactions = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.json({ msg: "Please provide necessary fields" });
+  }
 
   try {
-    const user = await User.findOneAndUpdate(
-      { email },
-      { deposit: 0 },
-      {
-        new: true,
-      }
+    const user = await User.findOne({ email: email }).populate("transactions");
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const transactions = user.transactions.sort(
+      (a, b) => a.timestamp - b.timestamp
     );
 
-    let msg = `Your Deposit of ${deposit}USD has been declined.
-      \nThank you for choosing Phoenixfx . For complaints or inquires, do not hesitate to contact our 24/7 support team via email: support@Phoenixfx .com\n
-
-      \nRegards,
-      \nPhoenixfx `;
-
-    // sendMailx(msg, email, 'Update on Deposit status.');
-
-    res.json({ user, msg: "Deposit declined" });
-  } catch (err) {
-    res.json({ err: "cant approve deposit at this time" });
+    return res.status(200).json({ transactions });
+  } catch (error) {
+    console.error("Error retrieving user transactions:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while retrieving user transactions" });
   }
 };
 
-export const declineWithdrawal = async (req, res) => {
-  const { email, withdrawal } = req.body;
+export const transfer = async (req, res) => {
+  const { senderAcct, receiverAcct, amount } = req.body;
 
   try {
-    const user = await User.findOneAndUpdate(
-      { email },
-      { withdrawal: 0 },
-      {
-        new: true,
-      }
-    );
+    // Find the sender and receiver accounts
+    const sender = await User.findOne(senderAcct);
+    const receiver = await User.findOne(receiverAcct);
 
-    let msg = `Your withdrawal of ${withdrawal}USD has been declined.
-      \nThank you for choosing Phoenixfx . For complaints or inquires, do not hesitate to contact our 24/7 support team via email: support@Phoenixfx .com\n
+    // Check if sender and receiver accounts exist
+    if (!sender || !receiver) {
+      return res
+        .status(404)
+        .json({ error: "Sender or receiver account not found" });
+    }
 
-      \nRegards,
-      \nPhoenixfx `;
+    // Check if sender has sufficient balance
+    if (sender.balance < amount) {
+      return res
+        .status(400)
+        .json({ error: "Insufficient balance for transfer" });
+    }
 
-    // sendMailx(msg, email, 'Update on withdrawal status.');
+    // Deduct amount from sender's balance and create withdrawal transaction
+    sender.balance -= amount;
+    sender.withdrawal += amount;
+    await sender.save();
 
-    res.json({ user, msg: "Withdrawal declined" });
-  } catch (err) {
-    res.json({ err: "cant approve withdrawal at this time" });
+    const withdrawalTransaction = new Transaction({
+      userId: sender.senderAcct,
+      type: "withdrawal",
+      amount,
+    });
+    await withdrawalTransaction.save();
+
+    // Add amount to receiver's balance and create deposit transaction
+    receiver.balance += amount;
+    receiver.deposit += amount;
+    await receiver.save();
+
+    const depositTransaction = new Transaction({
+      userId: receiver.receiverAcct,
+      type: "deposit",
+      amount,
+    });
+    await depositTransaction.save();
+
+    res.status(200).json({ message: "Transfer successful" });
+  } catch (error) {
+    res.status(500).json({ error: "An error occurred during transfer" });
   }
 };
+
+export const CreateAccountNumber = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Find the user by their Email address
+    const user = await User.findOne({email: email});
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Generate a unique account number
+    const accountNumber = generateAccountNumber();
+
+    // Assign the generated account number to the user
+    user.accountNumber = accountNumber;
+    await user.save();
+
+    res.status(200).json({ accountNumber });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "An error occurred while generating the account number" });
+  }
+
+ 
+};
+ // Helper function to generate a unique account number
+  const generateAccountNumber = () => {
+    // Implement your own logic to generate a unique account number here
+    // This can be a combination of alphanumeric characters or a specific format
+    // For simplicity, let's assume we generate a random 6-digit number
+    return Math.floor(100000000 + Math.random() * 900000000).toString();
+  };
+// export const approveDeposit = async (req, res) => {
+//   const { email, deposit } = req.body;
+
+//   try {
+//     let user = await User.findOne({ email });
+//     let { balance } = user;
+
+//     balance += deposit;
+
+//     user = await User.findOneAndUpdate(
+//       { email },
+//       { balance, deposit: 0 },
+//       {
+//         new: true,
+//       }
+//     );
+
+//     let msg = `Your Deposit of ${deposit}USD has been approved.
+//       \nThank you for choosing Phoenixfx. For complaints or inquires, do not hesitate to contact our 24/7 support team via email: support@Phoenixfx .com\n
+
+//       \nRegards,
+//       \nPhoenixfx `;
+
+//     // sendMailx(msg, email, 'Update on Deposit status.');
+
+//     res.json({ user, msg: "Deposit approved" });
+//   } catch (err) {
+//     console.log("approve er", err);
+//     res.json({ err: "cant approve deposit at this time" });
+//   }
+// };
+
+// export const approveWithdrawal = async (req, res) => {
+//   //console.log('w');
+//   const { email, withdrawal } = req.body;
+
+//   try {
+//     let user = await User.findOne({ email });
+
+//     let { balance } = user;
+
+//     if (!(balance <= 0)) {
+//       balance -= withdrawal;
+//     } else {
+//       res.json({ error: "insufficient balance" });
+//     }
+
+//     user = await User.findOneAndUpdate(
+//       { email },
+//       { balance, withdrawal: 0 },
+//       {
+//         new: true,
+//       }
+//     );
+
+//     let msg = `Your withdrawal of ${withdrawal}USD has been approved.
+//       \nThank you for choosing Phoenixfx. For complaints or inquires, do not hesitate to contact our 24/7 support team via email: support@Phoenixfx .com\n
+
+//       \nRegards,
+//       \nPhoenixfx `;
+
+//     // sendMailx(msg, email, 'Update on withdrawal status.');
+
+//     res.json({ user, msg: "Withdrawal approved" });
+//   } catch (err) {
+//     // console.log('approve er', err);
+//     res.json({ err: "cant approve withdrawal at this time" });
+//   }
+// };
+
+// export const declineDeposit = async (req, res) => {
+//   const { email, deposit } = req.body;
+
+//   try {
+//     const user = await User.findOneAndUpdate(
+//       { email },
+//       { deposit: 0 },
+//       {
+//         new: true,
+//       }
+//     );
+
+//     let msg = `Your Deposit of ${deposit}USD has been declined.
+//       \nThank you for choosing Phoenixfx . For complaints or inquires, do not hesitate to contact our 24/7 support team via email: support@Phoenixfx .com\n
+
+//       \nRegards,
+//       \nPhoenixfx `;
+
+//     // sendMailx(msg, email, 'Update on Deposit status.');
+
+//     res.json({ user, msg: "Deposit declined" });
+//   } catch (err) {
+//     res.json({ err: "cant approve deposit at this time" });
+//   }
+// };
+
+// export const declineWithdrawal = async (req, res) => {
+//   const { email, withdrawal } = req.body;
+
+//   try {
+//     const user = await User.findOneAndUpdate(
+//       { email },
+//       { withdrawal: 0 },
+//       {
+//         new: true,
+//       }
+//     );
+
+//     let msg = `Your withdrawal of ${withdrawal}USD has been declined.
+//       \nThank you for choosing Phoenixfx . For complaints or inquires, do not hesitate to contact our 24/7 support team via email: support@Phoenixfx .com\n
+
+//       \nRegards,
+//       \nPhoenixfx `;
+
+//     // sendMailx(msg, email, 'Update on withdrawal status.');
+
+//     res.json({ user, msg: "Withdrawal declined" });
+//   } catch (err) {
+//     res.json({ err: "cant approve withdrawal at this time" });
+//   }
+// };

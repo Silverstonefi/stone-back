@@ -19,6 +19,9 @@ db();
 app.get('/', (req, res) => {
   res.json('Got you')
 })
+//localhost:4000
+
+
 
 app.get('/activate/:email', authController.activateUser)
 

@@ -1,17 +1,13 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
+  firstName: {
+    type: "string",
     required: true,
   },
-  btc: {
-    type: String,
-    default: "",
-  },
-  phone: {
-    type: String,
-    default: "",
+  lastName: {
+    type: "string",
+    required: true,
   },
   email: {
     type: String,
@@ -19,24 +15,69 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
   },
+  amount: {
+    type: Number,
+    default: 0,
+  },
   password: {
     type: String,
     required: [true, "Please enter a password"],
     minlength: [6, "Minimum password length is 6 characters"],
+  },
+  accountType: {
+    type: "string",
+    default: "",
+  },
+  cardHolder: {
+    type: "string",
+    default: "",
+    default: "",
+  },
+  accountNumber: {
+    type: String,
+    default: "",
+    unique: true,
+  },
+  balance: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  senderAcct: {
+    type: String,
+    default: "",
+    unique: true,
+  },
+  receiverAcct: {
+    type: String,
+    default: "",
+    unique: true,
+  },
+  address: {
+    type: String,
+    default: "",
+  },
+  zipcode: {
+    type: String,
+    default: "",
+  },
+  bankName: {
+    type: String,
+    default: "",
+  },
+  routingNumber: {
+    type: Number,
+    default: 0,
+  },
+  phone: {
+    type: String,
+    default: "",
   },
   deposit: {
     type: Number,
     default: 0,
   },
   withdrawal: {
-    type: Number,
-    default: 0,
-  },
-  balance: {
-    type: Number,
-    default: 0,
-  },
-  profits: {
     type: Number,
     default: 0,
   },
@@ -47,8 +88,14 @@ const userSchema = new mongoose.Schema({
   },
   active: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
+  transactions: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Transaction",
+    },
+  ],
 });
 
-export default mongoose.model('User', userSchema);
+export default mongoose.model("User", userSchema);
