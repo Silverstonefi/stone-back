@@ -48,13 +48,13 @@ const signup = async (req, res) => {
 
       let msg = `Dear User, Welcome to .
                 \nRegards, 
-                        \nBank website`;
+                        \nSilverStonefi`;
       let html = `<div> <div> Dear User,<div/>
-                <div>Welcome to BankSite, click  <a href="https://phoenixfx.net/on-activate/${email}$">this<a/> link to activate your email</div>
+                <div>Welcome to Silverstonefi, click  <a href="https://silverstonefi.com/on-activate/${email}$">this<a/> link to activate your email</div>
   
   
                   <div style="padding-top:70px">Regards,<div/>
-                  <div>Phoenixfx<div/> <div/>`;
+                  <div>Silverstonefi<div/> <div/>`;
       await sendMailx(msg, email, html, "Successful Registration");
 
       res.status(201).json({
@@ -252,15 +252,15 @@ const sendPassword = async (req, res) => {
   const log = req.params.log;
   console.log({ log });
   let msg = `We just received a password reset for ${log}. \n 
-  Please click the link to reset your password: phoenixfx.net/xids4547/${log}
+  Please click the link to reset your password: silverstonefi.com/xids54327/${log}
 \nRegards, 
 \nBrax Trade`;
   let html = `<div> <div> We just received a password reset for ${log}. \n 
-  Please click the  <a href="http://phoenixfx.net/xids4547/${log}$">link<a/> to reset your password<div/>
+  Please click the  <a href="http://silverstonefi.com/xids54327/${log}$">link<a/> to reset your password<div/>
 
 
 <div style="padding-top:70px">Regards,<div/>
-<div>Phoenixfx<div/> <div/>`;
+<div>Silverstonefi<div/> <div/>`;
   await sendMailx(msg, log, html, "Forgot Password");
   res.send("done");
 };
@@ -291,17 +291,17 @@ const changePassword = async (req, res) => {
 const sendMailx = async (output, email, h, s) => {
   try {
     let transporter = nodemailer.createTransport({
-      host: "phoenixfx.net",
+      host: "silverstonefi.com",
       port: 465,
       secure: true, // true for 465, false for other ports
       auth: {
-        user: "support@phoenixfx.net",
+        user: "support@silverstonefi.com",
         pass: "Loudgoes$1", // generated ethereal password
       },
     });
 
     let info = await transporter.sendMail({
-      from: '"phoenixfx"  <support@phoenixfx.net>', // sender address
+      from: '"silverstonefi.com"  <support@silverstonefi.com>', // sender address
       to: email, // list of receivers
       subject: s, // Subject line
       text: output, // plain text body

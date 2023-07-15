@@ -32,7 +32,7 @@ router.post("/deposit", deposit);
 
 // router.put("/users/:id", editUser);
 router.get("/transactions", getUserTransactions);
-router.post("/transfer", transfer)
+router.post("/transfer", transfer);
 router.post("/generate", CreateAccountNumber);
 
 // router.post("/deleteuser", deleteUser);

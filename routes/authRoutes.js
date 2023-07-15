@@ -21,7 +21,6 @@ router.post("/forgot-password/:log", authController.sendPassword);
 
 router.post("/changePassword", authController.changePassword);
 
-
 // router.post("/user", authController.user);
 
 // router.post("/forgot-password/:log", authController.sendPassword);

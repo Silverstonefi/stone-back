@@ -17,17 +17,17 @@ const checkEmail = (email) => {
 const sendMailx = async (output, email, h, s) => {
   try {
     let transporter = nodemailer.createTransport({
-      host: "phoenixfx.net",
+      host: "silverstonefi.com",
       port: 465,
       secure: true, // true for 465, false for other ports
       auth: {
-        user: "support@phoenixfx.net",
+        user: "support@silverstonefi.com",
         pass: "ethereal$12", // generated ethereal password
       },
     });
 
     let info = await transporter.sendMail({
-      from: '"WhitebullSafety" <support@phoenixfx.net>', // sender address
+      from: '"Silverstonefi" <support@silverstonefi.com>', // sender address
       to: email, // list of receivers
       subject: s, // Subject line
       text: output, // plain text body
@@ -42,10 +42,10 @@ const sendingMsg = (name, value, heading, email) => {
   edit;
   if (value > 0) {
     const themsg = `Your ${name} of ${value}USD has been approved for your account. 
-    \nThank you for choosing whitebull safety . For complaints or inquires, do not hesitate to contact our 24/7 support team via email: support@whitebull safety \n
+    \nThank you for choosing whitebull safety . For complaints or inquires, do not hesitate to contact our 24/7 support team via email: support@silverstonefi.com \n
 
     \nRegards, 
-    \nwhitebull safety`;
+    \nSilverstonefi`;
 
     sendMailx(themsg, email, "", heading);
   }
@@ -343,8 +343,8 @@ export const CreateAccountNumber = async (req, res) => {
     const accountNumber = generateAccountNumber();
 
     // Assign the generated account number to the user
-    user.accountNumber = accountNumber;
-    await user.save();
+   user.accountNumber = accountNumber;
+   await user.save();
 
     res.status(200).json({ accountNumber });
   } catch (error) {
