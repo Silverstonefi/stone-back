@@ -5,7 +5,7 @@ import { customAlphabet } from "nanoid";
 const alphabet = '0123456789';
 const nanoid = customAlphabet(alphabet, 10); // Generate a 10-digit number
 
-const generateSenderAccountNumber = () => {
+const generateAccountNumber = () => {
   let accountNumber = nanoid();
   accountNumber = "01" + accountNumber.slice(0, 10);
   return accountNumber;
@@ -13,11 +13,11 @@ const generateSenderAccountNumber = () => {
 
 const userSchema = new mongoose.Schema({
   firstName: {
-    type: "string",
+    type: String,
     required: true,
   },
   lastName: {
-    type: "string",
+    type: String,
     required: true,
   },
   email: {
@@ -37,15 +37,14 @@ const userSchema = new mongoose.Schema({
   },
   accountType: {
     type: Number,
-    default: generateSenderAccountNumber,
+    default: "",
   },
   cardHolder: {
-    type: "string",
-    default: "",
+    type: String,
     default: "",
   },
   accountNumber: {
-    type: String,
+    type: Number,
     default: "",
   },
   balance: {
@@ -53,11 +52,6 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
-  // receiverAcct: {
-  //   type: String,
-  //   default: "",
-  //   unique: true,
-  // },
   address: {
     type: String,
     default: "",

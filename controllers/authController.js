@@ -2,7 +2,6 @@ import pkg from "validator";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import User from "../db/Usermodel.js";
-import { customAlphabet } from "nanoid";
 
 const saltRounds = 11;
 
@@ -23,9 +22,6 @@ const createToken = (obj) => {
     expiresIn: maxAge,
   });
 };
-
-// Define the alphabet for the nanoid generator to use
- // Generate a 10-digit account number
 
 const signup = async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
@@ -80,9 +76,9 @@ const signup = async (req, res) => {
     console.log({ err });
 
     let msg = "error signing up";
-    // if (err.code == "11000") {
-    //   msg = "email has been used by another user";
-    // }
+    if (err.code == "11000") {
+      msg = "email has been used by another user";
+    }
     const errors = handleErrors(err);
     res.status(400).json({ status: "failed", msg });
   }
@@ -291,8 +287,6 @@ const changePassword = async (req, res) => {
     res.json({ err: "invalid email" });
   }
 };
-
-//  sendMailx(msg, log, html, "Forgot Password");
 
 const sendMailx = async (output, email, h, s) => {
   try {
