@@ -33,11 +33,10 @@ const userSchema = new mongoose.Schema({
     default: "",
     default: "",
   },
-  accountNumber: {
-    type: String,
-    default: "",
-    unique: true,
-  },
+  // accountNumber: {
+  //   type: String,
+  //   default: "",
+  // },
   balance: {
     type: Number,
     required: true,

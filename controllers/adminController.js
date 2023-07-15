@@ -333,7 +333,7 @@ export const CreateAccountNumber = async (req, res) => {
 
   try {
     // Find the user by their Email address
-    const user = await User.findOne({email: email});
+    const user = await User.findOne({ email: email });
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
