@@ -276,58 +276,57 @@ export const getUserTransactions = async (req, res) => {
   }
 };
 
-// export const transfer = async (req, res) => {
-//   const { accountNumber, receiverAcct, amount } = req.body;
+export const transfer = async (req, res) => {
+  const { accountNumber, receiverAcct, amount } = req.body;
 
-//   try {
-//     // Find the sender and receiver accounts
-//     const sender = await User.findOne({accountNumber});
-//     const receiver = await User.findOne({receiverAcct});
+  try {
+    // Find the sender and receiver accounts
+    const sender = await User.findOne({ accountNumber });
+    const receiver = await User.findOne({ receiverAcct });
 
-//     // Check if sender and receiver accounts exist
-//     if (!sender || !receiver) {
-//       return res
-//         .status(404)
-//         .json({ error: "Sender or receiver account not found" });
-//     }
+    // Check if sender and receiver accounts exist
+    if (!sender || !receiver) {
+      return res
+        .status(404)
+        .json({ error: "Sender or receiver account not found" });
+    }
 
-//     // Check if sender has sufficient balance
-//     if (sender.balance < amount) {
-//       return res
-//         .status(400)
-//         .json({ error: "Insufficient balance for transfer" });
-//     }
+    // Check if sender has sufficient balance
+    if (sender.balance < amount) {
+      return res
+        .status(400)
+        .json({ error: "Insufficient balance for transfer" });
+    }
 
-//     // Deduct amount from sender's balance and create withdrawal transaction
-//     sender.balance -= amount;
-//     sender.withdrawal += amount;
-//     await sender.save();
+    // Deduct amount from sender's balance and create withdrawal transaction
+    sender.balance -= amount;
+    sender.withdrawal += amount;
+    await sender.save();
 
-//     const withdrawalTransaction = new Transaction({
-//       userId: sender.accountNumber,
-//       type: "withdrawal",
-//       amount,
-//     });
-//     await withdrawalTransaction.save();
+    const withdrawalTransaction = new Transaction({
+      userId: sender.accountNumber,
+      type: "withdrawal",
+      amount,
+    });
+    await withdrawalTransaction.save();
 
-//     // Add amount to receiver's balance and create deposit transaction
-//     receiver.balance += amount;
-//     receiver.deposit += amount;
-//     await receiver.save();
+    // Add amount to receiver's balance and create deposit transaction
+    receiver.balance += amount;
+    receiver.deposit += amount;
+    await receiver.save();
 
-//     const depositTransaction = new Transaction({
-//       userId: receiver.receiverAcct,
-//       type: "deposit",
-//       amount,
-//     });
-//     await depositTransaction.save();
+    const depositTransaction = new Transaction({
+      userId: receiver._id,
+      type: "deposit",
+      amount,
+    });
+    await depositTransaction.save();
 
-//     res.status(200).json({ message: "Transfer successful" });
-//   } catch (error) {
-//     res.status(500).json({ error: "An error occurred during transfer" });
-//   }
-// };
-
+    res.status(200).json({ message: "Transfer successful" });
+  } catch (error) {
+    res.status(500).json({ error: "An error occurred during transfer" });
+  }
+};
 
 // export const approveDeposit = async (req, res) => {
 //   const { email, deposit } = req.body;
