@@ -2,6 +2,7 @@ import pkg from "validator";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import User from "../db/Usermodel.js";
+import { customAlphabet } from "nanoid";
 
 const saltRounds = 11;
 
@@ -22,11 +23,33 @@ const createToken = (obj) => {
     expiresIn: maxAge,
   });
 };
+const alphabet = "0123456789";
+const nanoid = customAlphabet(alphabet, 11); // Generate a 10-digit number
 
 const signup = async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    dial,
+    account,
+    address,
+    date,
+    currency,
+  } = req.body;
 
-  const msg = checkUserDetails({ firstName, lastName, email, password });
+  const msg = checkUserDetails({
+    firstName,
+    lastName,
+    email,
+    password,
+    dial,
+    account,
+    address,
+    date,
+    currency,
+  });
   try {
     if (
       msg.firstName !== "" ||
@@ -36,12 +59,23 @@ const signup = async (req, res) => {
     ) {
       res.status(400).json({ msg });
     } else {
-      
+      // Generate a unique 10-digit number
+      let accountNumber = nanoid();
+
+      // Ensure account number is 12 digits long and starts with "01"
+      accountNumber = "0" + "1" + accountNumber;
+
       const user = await User.create({
         firstName,
         lastName,
         email,
+        dial,
+        account,
+        address,
+        date,
+        currency,
         password,
+        accountNumber, // Assign the generated account number to the user
         deposit: 0,
         withdrawal: 0,
         balance: 0,
@@ -64,7 +98,13 @@ const signup = async (req, res) => {
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
+          dial: user.dial,
+          account: user.account,
+          address: user.address,
+          date: user.date,
+          currency: user.currency,
           password: user.password,
+          accountNumber: user.accountNumber, // Include the account number in the response
           deposit: 0,
           withdrawal: 0,
           balance: 0,

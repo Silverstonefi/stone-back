@@ -39,13 +39,29 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: "",
   },
+  account: {
+    type: String,
+    default: "",
+  },
+  currency: {
+    type: String,
+    default: "",
+  },
+  date: {
+    type: String,
+    default: "",
+  },
+  dial: {
+    type: String,
+    default: "",
+  },
   cardHolder: {
     type: String,
     default: "",
   },
   accountNumber: {
     type: Number,
-    default: "",
+    default: generateAccountNumber,
   },
   balance: {
     type: Number,
