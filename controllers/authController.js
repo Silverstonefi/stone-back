@@ -1,5 +1,7 @@
 import pkg from "validator";
 import jwt from "jsonwebtoken";
+import Transaction from "../db/Transmodel.js";
+
 import nodemailer from "nodemailer";
 import User from "../db/Usermodel.js";
 import { customAlphabet } from "nanoid";
@@ -228,6 +230,18 @@ const getProfile = async (req, res) => {
   }
 };
 
+// const userHistory = async (req, res) => {
+//  const email = req.body;
+
+//   try {
+//     const transactions = await Transaction.find({ email: email }).sort({ timestamp: -1 });
+//     res.status(200).json({ transactions });
+//   } catch (error) {
+//     console.error('Error retrieving user transactions:', error);
+//     res.status(500).json({ error: 'An error occurred while retrieving user transactions' });
+//   }
+// };
+
 const editAccount = async (req, res) => {
   const { email, btc } = req.body;
   if (checkEmail(email)) {
@@ -357,6 +371,7 @@ export default {
   signup,
   login,
   logout,
+  // userHistory,
   editAccount,
   editProfile,
   getProfile,

@@ -6,16 +6,14 @@ import {
   editUser,
   deleteUser,
   withdrawals,
-  // approveWithdrawal,
-  // declineWithdrawal,
   withdraw,
   deposits,
   deposit,
-  // approveDeposit,
-  // declineDeposit,
   getUserTransactions,
-  // CreateAccountNumber,
   transfer,
+  trasnferx,
+  approval,
+  approveTransfer,
 } from "../controllers/adminController.js";
 
 router.get("/users", allUsers);
@@ -31,8 +29,10 @@ router.post("/deposit", deposit);
 // router.post("/deposit/decline", declineDeposit);
 
 router.put("/users/:id", editUser);
-router.get("/transactions", getUserTransactions);
+router.post("/transactions", getUserTransactions);
 router.post("/transfer", transfer);
+router.post("/transferx", trasnferx);
+router.put("/transfer/approve/:transferId", approveTransfer);
 // router.post("/generate", CreateAccountNumber);
 
 router.post("/deleteuser", deleteUser);

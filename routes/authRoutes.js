@@ -15,6 +15,8 @@ router.post("/get-profile", authController.getProfile);
 
 router.post("/address", authController.editAccount);
 
+// router.get("/history", authController.userHistory);
+
 router.post("/forgot-password/:log", authController.sendPassword);
 
 // router.get("/activate/:email", authController.activateUser);

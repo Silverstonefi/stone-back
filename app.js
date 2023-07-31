@@ -15,6 +15,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Example middleware to extract the current user from the token
+
 db();
 app.get('/', (req, res) => {
   res.json('Got you')

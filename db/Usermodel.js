@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
 import { customAlphabet } from "nanoid";
 
-
-const alphabet = '0123456789';
+const alphabet = "0123456789";
 const nanoid = customAlphabet(alphabet, 10); // Generate a 10-digit number
 
 const generateAccountNumber = () => {
@@ -101,6 +100,11 @@ const userSchema = new mongoose.Schema({
     enum: ["user", "admin"],
     default: "user",
   },
+  // status: {
+  //   type: String,
+  //   enum: ["pending", "complete", "failed"],
+  //   default: "pending",
+  // },
   active: {
     type: Boolean,
     default: false,

@@ -86,7 +86,7 @@ export const deposits = async (req, res) => {
 };
 
 export const editUser = async (req, res) => {
-  const { email, name, withdrawal, deposit, balance, profits } = req.body;
+  const { email, firstName, lastName, withdrawal, deposit, balance } = req.body;
 
   if (checkEmail(email)) {
     try {
@@ -98,7 +98,7 @@ export const editUser = async (req, res) => {
 
       user = await User.findOneAndUpdate(
         { email },
-        { name, withdrawal, deposit, balance, profits },
+        { firstName, lastName, withdrawal, deposit, balance },
         {
           new: true,
         }
@@ -277,12 +277,12 @@ export const getUserTransactions = async (req, res) => {
 };
 
 export const transfer = async (req, res) => {
-  const { accountNumber, receiverAcct, amount } = req.body;
+  const { accountNumber, amount } = req.body;
 
   try {
     // Find the sender and receiver accounts
     const sender = await User.findOne({ accountNumber });
-    const receiver = await User.findOne({ receiverAcct });
+    const receiver = await User.findOne({ accountNumber });
 
     // Check if sender and receiver accounts exist
     if (!sender || !receiver) {
@@ -325,6 +325,235 @@ export const transfer = async (req, res) => {
     res.status(200).json({ message: "Transfer successful" });
   } catch (error) {
     res.status(500).json({ error: "An error occurred during transfer" });
+  }
+};
+
+export const trasnferx = async (req, res) => {
+  const { fromAccountNumber, toAccountNumber, amount } = req.body;
+
+  // Find sender and recipient by account numbers
+  const sender = await User.findOne({ accountNumber: fromAccountNumber });
+  const recipient = await User.findOne({ accountNumber: toAccountNumber });
+
+  if (!sender || !recipient) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  if (sender.balance < amount) {
+    return res.status(400).json({ message: "Insufficient balance." });
+  }
+
+  // Create a pending transaction
+  const transaction = new Transaction({
+    date: new Date(),
+    action: "Transfer",
+    status: "pending",
+    amount: amount,
+    recipient: toAccountNumber,
+  });
+  try {
+    // Save the transaction in the database
+    const savedTransaction = await transaction.save();
+
+    // Add the transaction's _id to the sender's transactions array
+    sender.transactions.push(savedTransaction._id);
+
+    // Deduct the amount from the sender's balance
+    sender.balance -= amount;
+
+    // Save the updated sender data
+    await sender.save();
+
+    // Return success response with the transaction details
+    return res
+      .status(200)
+      .json({
+        message: "Money transfer initiated. Awaiting admin approval.",
+        transaction: savedTransaction,
+      });
+  } catch (error) {
+    // Handle errors if any
+    return res.status(500).json({ message: "Error while saving transaction." });
+  }
+};
+
+export const approvasl = async (req, res) => {
+  const userId = req.body;
+  const status = req.body.status; // "approved" or "declined"
+
+  // Check if the status is valid
+  if (status !== "approved" && status !== "declined") {
+    return res.status(400).json({ message: "Transaction pending" });
+  }
+
+  // Find the transfer record in the User model's transactions array
+  try {
+    const user = await Transaction.findOne({ transactions: userId });
+    if (!user) {
+      return res.status(404).json({ message: "Transfer not found." });
+    }
+
+    // Update the status of the transfer
+    user.transactions.forEach((transaction) => {
+      if (userId) {
+        transaction.status = status;
+      }
+    });
+
+    // Save the updated user data
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ message: "Transfer status updated successfully." });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const approval = async (req, res) => {
+  const Id = req.params.transferId; // Get the transferId from URL parameter
+  const { email, amount, status } = req.body;
+
+  try {
+    let user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    let transferId = await Transaction.findOne({_id: Id});
+    let { balance } = user;
+
+    if (status !== "approved" && status !== "declined") {
+      return res.status(400).json({
+        message: "Invalid status. Status must be 'approved' or 'declined'.",
+      });
+    }
+
+    // Find the specific transaction belonging to the user and matching the transferId
+    const transactionToUpdate = user.transactions.find(
+      (transaction) =>
+        transaction._id.toString() === transferId && // Compare with transferId as a string
+        transaction.type === "direct transfer" &&
+        transaction.amount === amount &&
+        transaction.status === "pending"
+    );
+
+    if (transactionToUpdate) {
+      transactionToUpdate.status = status;
+    } else {
+      return res
+        .status(404)
+        .json({ message: "Transaction not found or not pending approval." });
+    }
+
+    // Update the user's balance if approved
+    if (status === "approved") {
+      balance += amount;
+      user.balance = balance;
+      user.amount = 0;
+    }
+
+    // Save the updated user data
+    await user.save();
+
+    // Create a new Transaction record for the approval
+    const transferTransaction = new Transaction({
+      userId: transferId,
+      type: "direct transfer",
+      amount,
+      status,
+    });
+
+    await transferTransaction.save();
+
+    return res.json({
+      message: "Direct Transfer approved successfully.",
+    });
+  } catch (err) {
+    console.error("approve error", err);
+    return res.status(500).json({
+      error: "Could not approve direct transfer at this time.",
+    });
+  }
+};
+
+export const getAllTransactions = async (req, res) => {
+  try {
+    // Fetch all transactions from the database
+    const transactions = await Transaction.find({});
+
+    // Return the transactions in the response
+    return res.status(200).json({ transactions });
+  } catch (err) {
+    console.error("Error fetching transactions:", err);
+    return res
+      .status(500)
+      .json({ error: "Could not fetch transactions at this time." });
+  }
+};
+
+export const approveTransfer = async (req, res) => {
+  const { email, amount, status } = req.body;
+
+  try {
+    let user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    let { balance } = user;
+
+    if (status !== "approved" && status !== "declined") {
+      return res.status(400).json({
+        message: "Invalid status. Status must be 'approved' or 'declined'.",
+      });
+    }
+
+    if (status === "approved") {
+      // Update the user's balance
+      balance += amount;
+      user.balance = balance;
+      user.amount = 0;
+    }
+
+    // Find the specific transaction belonging to the user and update its status
+    const transactionToUpdate = user.transactions.find(
+      (transaction) =>
+        transaction.type === "direct transfer" &&
+        transaction.amount === amount &&
+        transaction.status === "pending"
+    );
+
+    if (transactionToUpdate) {
+      transactionToUpdate.status = status;
+    } else {
+      return res
+        .status(404)
+        .json({ message: "Transaction not found or not pending approval." });
+    }
+
+    // Save the updated user data
+    await user.save();
+
+    // Create a new Transaction record for the approval
+    const transferTransaction = new Transaction({
+      userId: transactionToUpdate._id,
+      type: "direct transfer",
+      amount,
+      status,
+    });
+
+    await transferTransaction.save();
+
+    return res.json({
+      message: "Direct Transfer approved successfully.",
+    });
+  } catch (err) {
+    console.error("approve error", err);
+    return res.status(500).json({
+      error: "Could not approve direct transfer at this time.",
+    });
   }
 };
 
