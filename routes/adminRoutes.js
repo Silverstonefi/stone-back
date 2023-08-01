@@ -10,10 +10,11 @@ import {
   deposits,
   deposit,
   getUserTransactions,
+  // transfer,
   transfer,
-  trasnferx,
-  approval,
+  // approval,
   approveTransfer,
+  getAllTransactions,
 } from "../controllers/adminController.js";
 
 router.get("/users", allUsers);
@@ -30,9 +31,10 @@ router.post("/deposit", deposit);
 
 router.put("/users/:id", editUser);
 router.post("/transactions", getUserTransactions);
+// router.post("/transfer", transfer);
 router.post("/transfer", transfer);
-router.post("/transferx", trasnferx);
-router.put("/transfer/approve/:transferId", approveTransfer);
+router.get("/all-users-transactions", getAllTransactions);
+router.put("/transfer/approve", approveTransfer);
 // router.post("/generate", CreateAccountNumber);
 
 router.post("/deleteuser", deleteUser);
