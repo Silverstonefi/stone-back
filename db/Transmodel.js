@@ -14,14 +14,6 @@ const transactionSchema = new mongoose.Schema({
     enum: ["deposit", "withdrawal", "transfer"],
   },
   amount: Number,
-  date: {
-    type: Date,
-    default: Date.now,
-  },
-  action: {
-    type: String,
-    required: true,
-  },
   status: {
     type: String,
     enum: ["pending", "complete", "failed"],

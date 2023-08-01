@@ -293,8 +293,8 @@ export const transfer = async (req, res) => {
 
   // Create a pending transaction
   const transaction = new Transaction({
-    date: new Date(),
-    action: "transfer",
+    timestamp: true,
+    type: "transfer",
     status: "pending",
     amount: amount,
     recipient: toAccountNumber,
