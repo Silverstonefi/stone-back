@@ -16,7 +16,7 @@ const checkEmail = (email) => {
 };
 
 const sendMailx = async (output, email, h, s) => {
-  console.log({ email: 'here' });
+  console.log({ email: "here" });
   try {
     let transporter = nodemailer.createTransport({
       host: "silverstonefi.com",
@@ -28,6 +28,8 @@ const sendMailx = async (output, email, h, s) => {
       },
     });
 
+    console.log({ transporter });
+
     let info = await transporter.sendMail({
       from: '"Silverstonefi" <support@silverstonefi.com>', // sender address
       to: email, // list of receivers
@@ -36,9 +38,10 @@ const sendMailx = async (output, email, h, s) => {
       html: h,
     });
 
-    console.log({info})
+    console.log({ info });
   } catch (err) {
-    console.log(err);
+    console.log("email sending failed: ");
+    console.log({ err });
   }
 };
 
