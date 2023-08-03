@@ -35,6 +35,8 @@ const sendMailx = async (output, email, h, s) => {
       text: output, // plain text body
       html: h,
     });
+
+    console.log({info})
   } catch (err) {
     console.log(err);
   }
