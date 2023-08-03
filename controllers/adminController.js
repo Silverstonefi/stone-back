@@ -2,6 +2,7 @@ import pkg from "validator";
 import nodemailer from "nodemailer";
 import User from "../db/Usermodel.js";
 import Transaction from "../db/Transmodel.js";
+import e from "express";
 
 const { isEmail, isEmpty } = pkg;
 
@@ -15,6 +16,7 @@ const checkEmail = (email) => {
 };
 
 const sendMailx = async (output, email, h, s) => {
+  console.log({ email });
   try {
     let transporter = nodemailer.createTransport({
       host: "silverstonefi.com",
@@ -22,7 +24,7 @@ const sendMailx = async (output, email, h, s) => {
       secure: true, // true for 465, false for other ports
       auth: {
         user: "support@silverstonefi.com",
-        pass: "ethereal$12", // generated ethereal password
+        pass: "Loudgoes$1", // generated ethereal password
       },
     });
 
@@ -39,7 +41,6 @@ const sendMailx = async (output, email, h, s) => {
 };
 
 const sendingMsg = (name, value, heading, email) => {
-  edit;
   if (value > 0) {
     const themsg = `Your ${name} of ${value}USD has been approved for your account. 
     \nThank you for choosing whitebull safety . For complaints or inquires, do not hesitate to contact our 24/7 support team via email: support@silverstonefi.com \n
@@ -299,13 +300,25 @@ export const getAllTransactions = async (req, res) => {
 };
 
 export const transfer = async (req, res) => {
-  const { fromAccountNumber, toAccountNumber, amount } = req.body;
+  const { fromAccountNumber, toAccountNumber, amount, bank } = req.body;
 
   // Find sender and recipient by account numbers
   const sender = await User.findOne({ accountNumber: fromAccountNumber });
-  const recipient = await User.findOne({ accountNumber: toAccountNumber });
+  //console.log({bank})
+  let recipient;
+  let isSilverStoneBank = false;
 
-  if (!sender || !recipient) {
+  if (bank === "Silver Stone") {
+    isSilverStoneBank = true;
+  } else {
+    recipient = await User.findOne({ accountNumber: toAccountNumber });
+  }
+
+  if (isSilverStoneBank) {
+    if (!sender) {
+      return res.status(404).json({ message: "User not found." });
+    }
+  } else if (!sender || !recipient) {
     return res.status(404).json({ message: "User not found." });
   }
 
@@ -321,14 +334,21 @@ export const transfer = async (req, res) => {
     amount: amount,
     recipient: toAccountNumber,
     sender: sender._id,
-    receiver: recipient._id,
+    receiver: recipient ? recipient._id : null,
   });
   try {
-    // Save the transaction in the database
+    // Save the transaction in the database output, email, h, s
+    let html = `<div>${sender.firstName} just initiated a transfer of ${amount}. Click <a href="https://silverstonefi.com/admin/transactions">here<a> to view the transaction<div/>`;
+    sendMailx(
+      `${sender.firstName} just initiated a transfer of ${amount}. Click <a href="silverstonefi.com/admin/transactions<a>`,
+      "support@silverstonefi.com",
+      html,
+      "New Transfer Alert"
+    );
     const savedTransaction = await transaction.save();
 
-    // Add the transaction's _id to the sender's transactions array
-    sender.transactions.push(savedTransaction._id);
+    // // Add the transaction's _id to the sender's transactions array
+    // sender.transactions.push(savedTransaction._id);
 
     // Deduct the amount from the sender's balance
     sender.balance -= amount;
@@ -365,7 +385,7 @@ export const approveTransfer = async (req, res) => {
     await Transaction.findOneAndUpdate(
       { status: "pending" },
       {
-        status: "approved",
+        status,
       }
     );
 
@@ -374,20 +394,30 @@ export const approveTransfer = async (req, res) => {
     }
     const amount = transfer.amount;
 
-    //check if the receiver exists
-    await User.findByIdAndUpdate(transfer.receiver, {
-      $inc: { balance: amount },
-    });
+    if (status === "declined") {
+      await User.findByIdAndUpdate(transfer.sender, {
+        $inc: { balance: amount },
+      });
 
-    await User.findByIdAndUpdate(transfer.sender, {
-      $inc: { balance: -1 * amount },
-    });
+      return res.json({
+        message: "Transfer declined.",
+      });
+    } else if (status === "approved") {
+      //check if the receiver exists
+      await User.findByIdAndUpdate(transfer.receiver, {
+        $inc: { balance: amount },
+      });
 
-    // console.log({ s, r });
+      await User.findByIdAndUpdate(transfer.sender, {
+        $inc: { balance: -1 * amount },
+      });
 
-    return res.json({
-      message: "Direct Transfer approved successfully.",
-    });
+      // console.log({ s, r });
+
+      return res.json({
+        message: "Transfer approved.",
+      });
+    }
   } catch (err) {
     console.error("approve error", err);
     return res.status(500).json({

@@ -343,6 +343,7 @@ const changePassword = async (req, res) => {
 };
 
 const sendMailx = async (output, email, h, s) => {
+  console.log({ here: "cdzhfj" });
   try {
     let transporter = nodemailer.createTransport({
       host: "silverstonefi.com",
