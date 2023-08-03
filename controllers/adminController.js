@@ -28,8 +28,6 @@ const sendMailx = async (output, email, h, s) => {
       },
     });
 
-    console.log({ transporter });
-
     let info = await transporter.sendMail({
       from: '"Silverstonefi" <support@silverstonefi.com>', // sender address
       to: email, // list of receivers
@@ -38,6 +36,7 @@ const sendMailx = async (output, email, h, s) => {
       html: h,
     });
 
+    console.log('after sendEmail')
     console.log({ info });
   } catch (err) {
     console.log("email sending failed: ");
