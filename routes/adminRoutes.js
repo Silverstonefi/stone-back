@@ -34,7 +34,7 @@ router.post("/transactions", getUserTransactions);
 // router.post("/transfer", transfer);
 router.post("/transfer", transfer);
 router.get("/all-users-transactions", getAllTransactions);
-router.put("/transfer/approve", approveTransfer);
+router.put("/transfer/approve/:transferId", approveTransfer);
 // router.post("/generate", CreateAccountNumber);
 
 router.post("/deleteuser", deleteUser);

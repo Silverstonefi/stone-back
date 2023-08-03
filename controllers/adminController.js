@@ -250,22 +250,18 @@ export const withdraw = async (req, res) => {
 };
 
 export const getUserTransactions = async (req, res) => {
-  const { email } = req.body;
+  const { userId } = req.params;
 
-  if (!email) {
+  if (!userId) {
     return res.json({ msg: "Please provide necessary fields" });
   }
 
   try {
-    const user = await User.findOne({ email: email }).populate("transactions");
+    const transactions = await Transaction.findOne({ sender: userId });
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    if (!transactions) {
+      return res.status(404).json({ error: "Transactions not found" });
     }
-
-    const transactions = user.transactions.sort(
-      (a, b) => a.timestamp - b.timestamp
-    );
 
     return res.status(200).json({ transactions });
   } catch (error) {
@@ -273,6 +269,32 @@ export const getUserTransactions = async (req, res) => {
     return res
       .status(500)
       .json({ error: "An error occurred while retrieving user transactions" });
+  }
+};
+
+export const getAllTransactions = async (req, res) => {
+  try {
+    const transactions = await Transaction.find({
+      status: "pending",
+      type: "transfer",
+    }).populate("sender", "firstName lastName email");
+
+    const transactionsWithUserDetails = transactions.map((transaction) => {
+      const { firstName, lastName, email } = User;
+      return {
+        ...transaction.toObject(),
+        firstName,
+        lastName,
+        email,
+      };
+    });
+
+    return res.status(200).json({ transactions: transactionsWithUserDetails });
+  } catch (err) {
+    console.error("Error fetching transactions:", err);
+    return res
+      .status(500)
+      .json({ error: "Could not fetch transactions at this time." });
   }
 };
 
@@ -325,35 +347,6 @@ export const transfer = async (req, res) => {
   }
 };
 
-export const getAllTransactions = async (req, res) => {
-  try {
-    // Fetch all transactions from the database and populate the "user" field
-    const transactions = await Transaction.find({}).populate(
-      "sender",
-      "firstName lastName email"
-    );
-
-    // Extract the user details (firstName, lastName, email) from each transaction
-    const transactionsWithUserDetails = transactions.map((transaction) => {
-      const { firstName, lastName, email } = User;
-      return {
-        ...transaction.toObject(),
-        firstName,
-        lastName,
-        email,
-      };
-    });
-
-    // Return the modified transactions in the response
-    return res.status(200).json({ transactions: transactionsWithUserDetails });
-  } catch (err) {
-    console.error("Error fetching transactions:", err);
-    return res
-      .status(500)
-      .json({ error: "Could not fetch transactions at this time." });
-  }
-};
-
 export const approveTransfer = async (req, res) => {
   const { transferId, status } = req.body;
 
@@ -367,14 +360,13 @@ export const approveTransfer = async (req, res) => {
     //increase recipient balance
     //decrease sender balance
     //update transaction status only if sender and recieiver exists
-    let transfer = await Transaction.findOneAndUpdate(
-      { _id: transferId, status: "pending" },
+    let transfer = await User.findOne({ transferId });
+
+    await Transaction.findOneAndUpdate(
+      { status: "pending" },
       {
         status: "approved",
       }
-      // {
-      //   status: "declined",
-      // }
     );
 
     if (!transfer) {
@@ -404,6 +396,86 @@ export const approveTransfer = async (req, res) => {
   }
 };
 
+// export const approveTransfer = async (req, res) => {
+//   const { transferId, status } = req.body;
+
+//   if (status !== "approved" && status !== "declined") {
+//     return res.status(400).json({
+//       message: "Invalid status. Status must be 'approved' or 'declined'.",
+//     });
+//   }
+
+//   try {
+//     // Find the pending transaction by ID and update the status
+//     const transaction = await Transaction.findOneAndUpdate(
+//       { status: "pending" },
+//       { status: "approved" },
+//     );
+
+//     if (!transaction) {
+//       return res
+//         .status(404)
+//         .json({ message: "Transaction not found or already processed." });
+//     }
+
+//     // If approved, update the sender and recipient balances accordingly
+//     if (status === "approved") {
+//       const amount = transaction.amount;
+//       const s = await User.findByIdAndUpdate(transaction.sender, {
+//         $inc: { balance: -amount },
+//       });
+//       const r = await User.findByIdAndUpdate(transaction.recipient, {
+//         $inc: { balance: amount },
+//       });
+//     }
+
+//     return res.json({
+//       message: `Transaction ${
+//         status === "approved" ? "approved" : "declined"
+//       } successfully.`,
+//       transaction: transaction,
+//     });
+//   } catch (err) {
+//     console.error("Approval error:", err);
+//     return res.status(500).json({
+//       error: "Could not process transaction at this time.",
+//     });
+//   }
+// };
+
+// const admincontrol = async (req, res) => {
+//   const { v4: uuidv4 } = require("uuid");
+//     const transferId = req.params;
+
+//   // Function to generate unique links for approve and decline actions
+//   const generateApprovalLink = () => {
+//     const approvalToken = uuidv4(); // Generate a random unique identifier
+//     return `https://example.com/approve-transfer/${transferId}/${approvalToken}`;
+//   };
+
+//   const generateDeclineLink = () => {
+//     const declineToken = uuidv4(); // Generate a random unique identifier
+//     return `https://example.com/decline-transfer/${transferId}/${declineToken}`;
+//   };
+//   let msg = `Request for Approval \n
+//   Transaction in process
+// \nRegards,
+// \nSupport`;
+//   let html = `<div> <div> You just received a request for a transaction. \n
+//   Please click the link to approve the transaction:
+//   ${generateApprovalLink} or
+//   Click the link to decline the transaction:
+//   ${generateDeclineLink}
+//   <div/>
+
+// <div style="padding-top:70px">Regards,<div/>
+// <div>Silverstonefi<div/> <div/>`;
+
+//  await sendMailx(msg, html, "Transaction Request");
+//  res.send("done");
+// };
+
+//     // sendMailx(msg, email, 'Update on Deposit status.');
 // export const approveDeposit = async (req, res) => {
 //   const { email, deposit } = req.body;
 
