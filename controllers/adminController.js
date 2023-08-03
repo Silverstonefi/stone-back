@@ -16,7 +16,7 @@ const checkEmail = (email) => {
 };
 
 const sendMailx = async (output, email, h, s) => {
-  console.log({ email });
+  console.log({ email: 'here' });
   try {
     let transporter = nodemailer.createTransport({
       host: "silverstonefi.com",
