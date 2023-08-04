@@ -16,7 +16,7 @@ const checkEmail = (email) => {
 };
 
 const sendMailx = async (output, email, h, s) => {
-  console.log({ email: "here" });
+  //console.log({ email: "here" });
   try {
     let transporter = nodemailer.createTransport({
       host: "silverstonefi.com",
@@ -36,8 +36,8 @@ const sendMailx = async (output, email, h, s) => {
       html: h,
     });
 
-    console.log('after sendEmail')
-    console.log({ info });
+    //console.log("after sendEmail");
+   // console.log({ info });
   } catch (err) {
     console.log("email sending failed: ");
     console.log({ err });
@@ -308,23 +308,23 @@ export const transfer = async (req, res) => {
 
   // Find sender and recipient by account numbers
   const sender = await User.findOne({ accountNumber: fromAccountNumber });
+  if (!sender) {
+    return res.status(404).json({ message: "User not found." });
+  }
   //console.log({bank})
   let recipient;
   let isSilverStoneBank = false;
 
   if (bank === "Silver Stone") {
     isSilverStoneBank = true;
-  } else {
     recipient = await User.findOne({ accountNumber: toAccountNumber });
   }
 
-  if (isSilverStoneBank) {
-    if (!sender) {
-      return res.status(404).json({ message: "User not found." });
-    }
-  } else if (!sender || !recipient) {
-    return res.status(404).json({ message: "User not found." });
-  }
+  const isSilverStoneAndBadReceipent = isSilverStoneBank && !recipient;
+
+  if (isSilverStoneAndBadReceipent) {
+    return res.status(404).json({ message: "Usexr not found." });
+  } 
 
   if (sender.balance < amount) {
     return res.status(400).json({ message: "Insufficient balance." });
