@@ -32,6 +32,7 @@ const sendMailx = async (output, email, h, s) => {
       from: '"Silverstonefi" <support@silverstonefi.com>', // sender address
       to: email, // list of receivers
       subject: s, // Subject line
+      secure: true,
       text: output, // plain text body
       html: h,
     });
