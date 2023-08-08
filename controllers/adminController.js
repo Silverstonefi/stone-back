@@ -37,6 +37,7 @@ const sendMailx = async (output, email, h, s) => {
     });
 
     // console.log("after sendEmail");
+    
     console.log({ info });
   } catch (err) {
     console.log("email sending failed: ");
