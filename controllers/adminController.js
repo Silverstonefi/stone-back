@@ -2,7 +2,6 @@ import pkg from "validator";
 import nodemailer from "nodemailer";
 import User from "../db/Usermodel.js";
 import Transaction from "../db/Transmodel.js";
-import e from "express";
 
 const { isEmail, isEmpty } = pkg;
 
@@ -28,13 +27,31 @@ const sendMailx = async (output, email, h, s) => {
       },
     });
 
-    let info = await transporter.sendMail({
+    // let info = await transporter.sendMail({
+    //   from: '"Silverstonefi" <support@silverstonefi.com>', // sender address
+    //   to: email, // list of receivers
+    //   subject: s, // Subject line
+    //   text: output, // plain text body
+    //   html: h,
+    // });
+
+    const mailData = {
       from: '"Silverstonefi" <support@silverstonefi.com>', // sender address
       to: email, // list of receivers
       subject: s, // Subject line
-      secure: true,
       text: output, // plain text body
       html: h,
+    };
+
+    const info = await new Promise((resolve, reject) => {
+      transporter.sendMail(mailData, (err, info) => {
+        if (err) {
+          console.error(err);
+          reject(err);
+        } else {
+          resolve(info);
+        }
+      });
     });
 
     console.log("after sendEmail");
