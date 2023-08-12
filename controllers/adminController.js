@@ -391,7 +391,8 @@ export const transfer = async (req, res) => {
 };
 
 export const approveTransfer = async (req, res) => {
-  const { transferId, status } = req.body;
+  const { status } = req.body;
+  const transferId = req.params.transferId;
 
   if (status !== "approved" && status !== "declined") {
     return res.status(400).json({
@@ -400,13 +401,12 @@ export const approveTransfer = async (req, res) => {
   }
 
   try {
-    //increase recipient balance
-    //decrease sender balance
-    //update transaction status only if sender and recieiver exists
-    let transfer = await User.findOne({ transferId });
-
+    let transfer = await Transaction.findById(transferId);
     await Transaction.findOneAndUpdate(
-      { status: "pending" },
+      {
+        //  status: "pending",
+        _id: transferId,
+      },
       {
         status,
       }
@@ -431,9 +431,9 @@ export const approveTransfer = async (req, res) => {
         $inc: { balance: amount },
       });
 
-      await User.findByIdAndUpdate(transfer.sender, {
-        $inc: { balance: -1 * amount },
-      });
+      // await User.findByIdAndUpdate(transfer.sender, {
+      //   $inc: { balance: -1 * amount },
+      // });
 
       // console.log({ s, r });
 
